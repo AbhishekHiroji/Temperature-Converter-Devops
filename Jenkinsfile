@@ -4,6 +4,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'abhishekhiroji/temperature-converter'
+        DOCKER_EXE = 'C:\\Users\\Abhishek Hiroji\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
     }
 
     stages {
@@ -33,7 +34,9 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %DOCKER_IMAGE%:%BUILD_NUMBER% -t %DOCKER_IMAGE%:latest .'
+                bat '''
+                    "%DOCKER_EXE%" build -t %DOCKER_IMAGE%:%BUILD_NUMBER% -t %DOCKER_IMAGE%:latest .
+                '''
             }
         }
 
@@ -48,13 +51,13 @@ pipeline {
                 ]) {
                     bat '''
                         @echo off
-                        echo %DOCKERHUB_TOKEN%| docker login --username %DOCKERHUB_USERNAME% --password-stdin
+                        echo %DOCKERHUB_TOKEN%| "%DOCKER_EXE%" login --username "%DOCKERHUB_USERNAME%" --password-stdin
                         if errorlevel 1 exit /b 1
-                        docker push %DOCKER_IMAGE%:%BUILD_NUMBER%
+                        "%DOCKER_EXE%" push %DOCKER_IMAGE%:%BUILD_NUMBER%
                         if errorlevel 1 exit /b 1
-                        docker push %DOCKER_IMAGE%:latest
+                        "%DOCKER_EXE%" push %DOCKER_IMAGE%:latest
                         if errorlevel 1 exit /b 1
-                        docker logout
+                        "%DOCKER_EXE%" logout
                     '''
                 }
             }
@@ -63,10 +66,10 @@ pipeline {
 
     post {
         success {
-            echo 'Build, Selenium tests, Docker build and Docker Hub push completed!'
+            echo 'Pipeline completed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Check the Console Output.'
+            echo 'Pipeline failed. Check Console Output.'
         }
     }
 }
